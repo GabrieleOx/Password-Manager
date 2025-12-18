@@ -9,13 +9,17 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -29,12 +33,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gabrieleox.passwordmanager.MainActivity.Companion.aliasList
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -107,6 +113,12 @@ fun ShowButton(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        elevation = ButtonDefaults.filledTonalButtonElevation(
+            defaultElevation = 3.dp,
+            pressedElevation = 7.dp,
+            focusedElevation = 5.dp,
+            hoveredElevation = 4.dp
         )
     ) {
         Text(
@@ -164,6 +176,62 @@ fun Folder(
                         }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun FolderMod(
+    folderName: String,
+    onDelete:() -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.5f.dp,
+            color = MaterialTheme.colorScheme.outline
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 5.dp)
+        ) {
+            LazyRow(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .weight(1f)
+            ) {
+                item {
+                    Text(
+                        text = folderName,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    )
+                }
+            }
+            FilledTonalIconButton(
+                onClick = onDelete,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.DeleteForever,
+                    contentDescription = "Delete button"
+                )
             }
         }
     }

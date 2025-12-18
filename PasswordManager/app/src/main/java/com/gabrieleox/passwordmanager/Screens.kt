@@ -1,5 +1,6 @@
 package com.gabrieleox.passwordmanager
 
+import android.content.Context
 import android.os.Build
 import android.view.WindowManager
 import android.widget.Toast
@@ -190,7 +191,7 @@ fun CreationScreen() {
     var modType by remember { mutableStateOf(true) }
     var titolo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var folder by remember { mutableStateOf(aliasList.keys.toList().first()) }
+    var folder by remember { mutableStateOf("") }
     var folderMenu by remember { mutableStateOf(false) }
     var maiuscole by remember { mutableStateOf(true) }
     var numeri by remember { mutableStateOf(true) }
@@ -198,6 +199,10 @@ fun CreationScreen() {
     var lunghezza by remember { mutableIntStateOf(10) }
     val context = LocalContext.current
     var passwordVisibile by remember { mutableStateOf(false) }
+
+    if (aliasList.keys.toList().isNotEmpty()){
+        folder = aliasList.keys.toList().first()
+    }
 
     Box(
         modifier = Modifier
@@ -487,6 +492,12 @@ fun CreationScreen() {
                             disabledContainerColor = MaterialTheme.colorScheme.surface,
                             contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                             disabledContentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        elevation = ButtonDefaults.filledTonalButtonElevation(
+                            defaultElevation = 3.dp,
+                            pressedElevation = 7.dp,
+                            focusedElevation = 5.dp,
+                            hoveredElevation = 4.dp
                         )
                     ) {
                         Text(
@@ -578,6 +589,123 @@ fun passwordGenerator(
 
 @Composable
 fun EditingScreen(){
+    val deleteFolder: DeleteViewModel<String> = viewModel()
+    var editing by remember { mutableStateOf(true) }
+    var recompose by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ){
+        Text(
+            text = "Modifica:",
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = if (editing){
+                    "Cartelle:"
+                }else{
+                    "Password:"
+                },
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Switch(
+                checked = editing,
+                onCheckedChange = {
+                    editing = !editing
+                },
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.inverseSurface,
+                    checkedThumbColor = MaterialTheme.colorScheme.inverseOnSurface,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surface,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(horizontal = 10.dp)
+            )
+        }
+        if (editing){
+            if (recompose){
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(aliasList.keys.toList()){ folder ->
+                        FolderMod(
+                            folderName = folder,
+                            onDelete = {
+                                Toast.makeText(context, "Attenzione: cancellando la cartella cancellerai anche le password", Toast.LENGTH_LONG).show()
+                                deleteFolder.requestDeleting(folder)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+    if(deleteFolder.isDialogShown){
+        DeleteDialog(
+            onDismiss = {
+                deleteFolder.onDismiss()
+            },
+            onConfirm = {
+                if (deleteFolder.toBeDeleted != null){
+                    deleteFolder(
+                        folder = deleteFolder.toBeDeleted!!,
+                        context = context
+                    )
+                }
+                recompose = !recompose
+                recompose = !recompose
+                deleteFolder.onDismiss()
+            }
+        )
+    }
+}
+
+fun deleteFolder(
+    folder: String,
+    context: Context
+): Boolean {
+    try{
+
+        aliasList.remove(folder)?.forEach { passwordName ->
+            deleteKey("$folder:$passwordName")
+        }
+
+        saveNames(
+            context = context,
+            names = aliasList
+        )
+
+    }catch (e: Exception){
+        println(e.message)
+        e.printStackTrace()
+        return false
+    }
+
+    return true
 }
 
 @Composable

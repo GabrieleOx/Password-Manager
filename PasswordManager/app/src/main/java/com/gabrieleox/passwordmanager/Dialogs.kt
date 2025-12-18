@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -25,7 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun DeletePasswordDialog(
+fun DeleteDialog(
     onDismiss:() -> Unit,
     onConfirm:() -> Unit
 ) {
@@ -37,7 +38,8 @@ fun DeletePasswordDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.6f),
+                .fillMaxWidth(0.6f)
+                .height(100.dp),
             shape = RoundedCornerShape(10.dp),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 6.dp,
