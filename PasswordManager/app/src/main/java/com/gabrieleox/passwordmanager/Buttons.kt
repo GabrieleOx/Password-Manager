@@ -98,6 +98,32 @@ fun CreationButton(
 }
 
 @Composable
+fun NewFolderButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean,
+    onClick: () -> Unit
+){
+    FilledTonalIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(50),
+        modifier = modifier
+            .scale(1.5f),
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = "Add"
+        )
+    }
+}
+
+@Composable
 fun ShowButton(
     alias: String,
     modifier: Modifier = Modifier,

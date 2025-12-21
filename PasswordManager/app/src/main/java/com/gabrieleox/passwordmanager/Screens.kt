@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -191,7 +192,11 @@ fun CreationScreen() {
     var modType by remember { mutableStateOf(true) }
     var titolo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var folder by remember { mutableStateOf("") }
+    var folder by remember { mutableStateOf(
+        if (aliasList.keys.toList().isNotEmpty()){
+            aliasList.keys.toList().first()
+        }else ""
+    )}
     var folderMenu by remember { mutableStateOf(false) }
     var maiuscole by remember { mutableStateOf(true) }
     var numeri by remember { mutableStateOf(true) }
@@ -199,10 +204,6 @@ fun CreationScreen() {
     var lunghezza by remember { mutableIntStateOf(10) }
     val context = LocalContext.current
     var passwordVisibile by remember { mutableStateOf(false) }
-
-    if (aliasList.keys.toList().isNotEmpty()){
-        folder = aliasList.keys.toList().first()
-    }
 
     Box(
         modifier = Modifier
@@ -590,84 +591,111 @@ fun passwordGenerator(
 @Composable
 fun EditingScreen(){
     val deleteFolder: DeleteViewModel<String> = viewModel()
+    val newFolder: NewFolderViewModel = viewModel()
     var editing by remember { mutableStateOf(true) }
-    var recompose by remember { mutableStateOf(true) }
+    var recompose by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ){
-        Text(
-            text = "Modifica:",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge,
+    if (recompose){
+        Box(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Text(
-                text = if (editing){
-                    "Cartelle:"
-                }else{
-                    "Password:"
-                },
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Switch(
-                checked = editing,
-                onCheckedChange = {
-                    editing = !editing
-                },
-                colors = SwitchDefaults.colors(
-                    checkedTrackColor = MaterialTheme.colorScheme.inverseSurface,
-                    checkedThumbColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.surface,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(horizontal = 10.dp)
-            )
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ){
+            CircularProgressIndicator()
         }
-        if (editing){
-            if (recompose){
-                LazyColumn(
+    }else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ){
+                Text(
+                    text = "Modifica:",
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 40.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .align(Alignment.CenterHorizontally)
                 ) {
-                    items(aliasList.keys.toList()){ folder ->
-                        FolderMod(
-                            folderName = folder,
-                            onDelete = {
-                                Toast.makeText(context, "Attenzione: cancellando la cartella cancellerai anche le password", Toast.LENGTH_LONG).show()
-                                deleteFolder.requestDeleting(folder)
-                            }
-                        )
+                    Text(
+                        text = if (editing){
+                            "Cartelle:"
+                        }else{
+                            "Password:"
+                        },
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = editing,
+                        onCheckedChange = {
+                            editing = !editing
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.inverseSurface,
+                            checkedThumbColor = MaterialTheme.colorScheme.inverseOnSurface,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surface,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(horizontal = 10.dp)
+                    )
+                }
+                if (editing){
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 40.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(aliasList.keys.toList()){ folder ->
+                            FolderMod(
+                                folderName = folder,
+                                onDelete = {
+                                    Toast.makeText(context, "Attenzione: cancellando la cartella cancellerai anche le password", Toast.LENGTH_LONG).show()
+                                    deleteFolder.requestDeleting(folder)
+                                    recompose = !recompose
+                                }
+                            )
+                        }
                     }
                 }
             }
+            NewFolderButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 25.dp, end = 25.dp),
+                enabled = editing,
+                onClick = {
+                    newFolder.onCreating()
+                    recompose = !recompose
+                }
+            )
         }
     }
+
     if(deleteFolder.isDialogShown){
         DeleteDialog(
             onDismiss = {
                 deleteFolder.onDismiss()
+                recompose = !recompose
             },
             onConfirm = {
                 if (deleteFolder.toBeDeleted != null){
@@ -676,10 +704,25 @@ fun EditingScreen(){
                         context = context
                     )
                 }
-                recompose = !recompose
-                recompose = !recompose
                 deleteFolder.onDismiss()
+                recompose = !recompose
             }
+        )
+    } else if(newFolder.isDialogShown){
+        NewFolderDialog(
+            onDismiss = {
+                newFolder.onDismiss()
+                recompose = !recompose
+            },
+            onConfirm = {
+                if (!newFolder.folderName.isNullOrBlank()){
+                    aliasList[newFolder.folderName!!] = mutableListOf()
+                    saveNames(aliasList, context)
+                }
+                newFolder.onDismiss()
+                recompose = !recompose
+            },
+            viewModel = newFolder
         )
     }
 }
