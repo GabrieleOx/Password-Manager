@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieleox.passwordmanager.MainActivity.Companion.aliasList
+import com.gabrieleox.passwordmanager.MainActivity.Companion.appTheme
 import java.security.SecureRandom
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -84,6 +85,7 @@ fun HomeScreen() {
             Text(
                 text = "Le tue password:",
                 fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge,
@@ -219,6 +221,7 @@ fun CreationScreen() {
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 30.sp,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -618,12 +621,13 @@ fun EditingScreen(){
                     text = "Modifica:",
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
+                    fontSize = 30.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                 )
-                Row(
+                /*Row(
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
                         .align(Alignment.CenterHorizontally)
@@ -657,7 +661,7 @@ fun EditingScreen(){
                             .align(Alignment.CenterVertically)
                             .padding(horizontal = 10.dp)
                     )
-                }
+                }*/
                 if (editing){
                     LazyColumn(
                         modifier = Modifier
@@ -753,4 +757,62 @@ fun deleteFolder(
 
 @Composable
 fun SettingsScreen(){
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(25.dp)
+    ) {
+        Text(
+            text = "Impostazioni:",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
+            fontSize = 30.sp,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "Tema ${
+                    if (appTheme)
+                        "scuro"
+                    else "chiaro"
+                }:",
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Start,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Switch(
+                checked = appTheme,
+                onCheckedChange = {
+                    appTheme = !appTheme
+                    saveTheme(
+                        value = appTheme,
+                        context = context
+                    )
+                },
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.inverseSurface,
+                    checkedThumbColor = MaterialTheme.colorScheme.inverseOnSurface,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surface,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(horizontal = 10.dp)
+            )
+        }
+    }
 }

@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -40,6 +43,9 @@ class MainActivity : AppCompatActivity() {
     companion object{
         @JvmStatic
         var aliasList: MutableMap<String, MutableList<String>> = mutableMapOf()
+
+        @JvmStatic
+        var appTheme by mutableStateOf<Boolean>(true)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -47,8 +53,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             aliasList = loadNames(this)
+            appTheme = loadTheme(this@MainActivity)?: isSystemInDarkTheme()
 
-            Theme{
+            Theme(
+                useDarkTheme = appTheme
+            ) {
                 PasswordManagerApp()
             }
         }
@@ -114,7 +123,10 @@ fun BottomNavigationBar(navController: NavHostController, items: List<Screen>) {
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+fun NavGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
     NavHost(navController = navController, startDestination = Screen.Home.route, modifier = modifier) {
         composable(Screen.Home.route) { HomeScreen() }
         composable(Screen.Create.route) { CreationScreen() }
