@@ -36,7 +36,7 @@ class PasswordViewModel : ViewModel() {
         })
 
         viewModelScope.launch {
-            delay(30_000)
+            delay(10_000)
             _password.value = null
         }
     }

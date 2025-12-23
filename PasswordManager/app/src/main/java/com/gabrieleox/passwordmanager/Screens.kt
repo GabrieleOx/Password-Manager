@@ -1,5 +1,7 @@
 package com.gabrieleox.passwordmanager
 
+import android.annotation.SuppressLint
+import android.content.ClipData
 import android.content.Context
 import android.os.Build
 import android.view.WindowManager
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -32,6 +35,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -45,10 +49,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +69,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieleox.passwordmanager.MainActivity.Companion.aliasList
 import com.gabrieleox.passwordmanager.MainActivity.Companion.appTheme
+import kotlinx.coroutines.launch
 import java.security.SecureRandom
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -113,6 +121,7 @@ fun HomeScreen() {
     }
 }
 
+@SuppressLint("ServiceCast")
 @Composable
 fun PasswordScreen(
     folder: String,
@@ -127,6 +136,8 @@ fun PasswordScreen(
     val context = LocalContext.current
     val activity = context.findFragmentActivity()
     val password by viewModel.password.collectAsState()
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
 
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -139,6 +150,7 @@ fun PasswordScreen(
     LaunchedEffect(Unit) {
         viewModel.clearPassword()
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -165,9 +177,54 @@ fun PasswordScreen(
                     Text("Mostra password", color = Color.White)
                 }
             } else {
-                Text("Cartella: $folder", color = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally))
-                Text("Nome: $name", color = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally))
-                Text("Password: ${password!!}", color = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(
+                    text ="Cartella: $folder",
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    fontSize = 25.sp
+                )
+                Text(
+                    text = "Nome: $name",
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    fontSize = 25.sp
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = "Password: ${password!!}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    )
+                    FilledTonalIconButton(
+                        onClick = {
+                            val clipData = ClipData.newPlainText(name, password)
+                            val clipEntry = ClipEntry(clipData)
+                            scope.launch {
+                                clipboard.setClipEntry(clipEntry)
+                                Toast.makeText(context, "Password di $name copiata con successo", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .background(Color.Transparent)
+                            .align(Alignment.CenterVertically),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ContentCopy,
+                            contentDescription = "Copy"
+                        )
+                    }
+                }
             }
         }
         Button(
@@ -204,8 +261,8 @@ fun CreationScreen() {
     var numeri by remember { mutableStateOf(true) }
     var simboli by remember { mutableStateOf(true) }
     var lunghezza by remember { mutableIntStateOf(10) }
-    val context = LocalContext.current
     var passwordVisibile by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -523,7 +580,11 @@ fun CreationScreen() {
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 25.dp, bottom = 25.dp),
-            enabled = password.isNotBlank() and titolo.isNotBlank() and folder.isNotBlank()
+            enabled = password.isNotBlank() and titolo.isNotBlank() and folder.isNotBlank(),
+            onClick = {
+                titolo = ""
+                password = ""
+            }
         )
     }
 }
@@ -591,11 +652,19 @@ fun passwordGenerator(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditingScreen(){
-    val deleteFolder: DeleteViewModel<String> = viewModel()
-    val newFolder: NewFolderViewModel = viewModel()
+    val deleteFolder: DeleteViewModel<String> = viewModel(key = "deleteFolder")
+    val deletePassword: DeleteViewModel<Pair<String, String>> = viewModel(key = "deletePassword")
+    val newFolder: NewFolderViewModel = viewModel(key = "newFolder")
     var editing by remember { mutableStateOf(true) }
+    var folderMenu by remember { mutableStateOf(false) }
+    var folder by remember { mutableStateOf(
+        if (aliasList.keys.toList().isNotEmpty()){
+            aliasList.keys.toList().first()
+        }else ""
+    ) }
     var recompose by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -627,7 +696,7 @@ fun EditingScreen(){
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                 )
-                /*Row(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
                         .align(Alignment.CenterHorizontally)
@@ -661,7 +730,7 @@ fun EditingScreen(){
                             .align(Alignment.CenterVertically)
                             .padding(horizontal = 10.dp)
                     )
-                }*/
+                }
                 if (editing){
                     LazyColumn(
                         modifier = Modifier
@@ -670,11 +739,65 @@ fun EditingScreen(){
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(aliasList.keys.toList()){ folder ->
-                            FolderMod(
-                                folderName = folder,
+                            ModButton(
+                                name = folder,
                                 onDelete = {
                                     Toast.makeText(context, "Attenzione: cancellando la cartella cancellerai anche le password", Toast.LENGTH_LONG).show()
                                     deleteFolder.requestDeleting(folder)
+                                    recompose = !recompose
+                                }
+                            )
+                        }
+                    }
+                }else {
+                    ExposedDropdownMenuBox(
+                        expanded = folderMenu,
+                        onExpandedChange = { folderMenu = !folderMenu },
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = folder,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Cartella") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(folderMenu)
+                            },
+                            modifier = Modifier
+                                .menuAnchor(
+                                    ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                                    enabled = true
+                                )
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = folderMenu,
+                            onDismissRequest = { folderMenu = false }
+                        ) {
+                            aliasList.keys.toList().forEach { it ->
+                                DropdownMenuItem(
+                                    text = { Text(text = it) },
+                                    onClick = {
+                                        folder = it
+                                        folderMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 40.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(aliasList.getValue(folder)){ passName ->
+                            ModButton(
+                                name = passName,
+                                onDelete = {
+                                    Toast.makeText(context, "Attenzione la password non sarà più recuperabile...", Toast.LENGTH_LONG).show()
+                                    deletePassword.requestDeleting(Pair(folder, passName))
                                     recompose = !recompose
                                 }
                             )
@@ -709,6 +832,29 @@ fun EditingScreen(){
                     )
                 }
                 deleteFolder.onDismiss()
+                recompose = !recompose
+            }
+        )
+    } else if(deletePassword.isDialogShown){
+        DeleteDialog(
+            onDismiss = {
+                deleteFolder.onDismiss()
+                recompose = !recompose
+            },
+            onConfirm = {
+                if (deletePassword.toBeDeleted != null){
+                    val pair = deletePassword.toBeDeleted!!
+
+                    aliasList[pair.first]?.remove(pair.second)
+
+                    deleteKey("${pair.first}:${pair.second}")
+
+                    saveNames(
+                        names = aliasList,
+                        context = context
+                    )
+                }
+                deletePassword.onDismiss()
                 recompose = !recompose
             }
         )

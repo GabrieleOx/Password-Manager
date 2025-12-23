@@ -1,7 +1,9 @@
 package com.gabrieleox.passwordmanager
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -40,6 +42,7 @@ import com.gabrieleox.passwordmanager.ui.theme.Theme
 
 class MainActivity : AppCompatActivity() {
 
+    @SuppressLint("MutableCollectionMutableState")
     companion object{
         @JvmStatic
         var aliasList: MutableMap<String, MutableList<String>> = mutableMapOf()
@@ -48,9 +51,13 @@ class MainActivity : AppCompatActivity() {
         var appTheme by mutableStateOf<Boolean>(true)
     }
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+
         setContent {
             aliasList = loadNames(this)
             appTheme = loadTheme(this@MainActivity)?: isSystemInDarkTheme()

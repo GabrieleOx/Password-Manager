@@ -50,7 +50,8 @@ fun CreationButton(
     alias: String,
     password: String,
     modifier: Modifier = Modifier,
-    enabled: Boolean
+    enabled: Boolean,
+    onClick:() -> Unit
 ){
     val context = LocalContext.current
     val activity = remember(context) {
@@ -59,6 +60,8 @@ fun CreationButton(
 
     FilledTonalIconButton(
         onClick = {
+            onClick()
+
             if (activity == null) return@FilledTonalIconButton
             if (!checkAuth(context)) return@FilledTonalIconButton
             if (aliasList[folder]?.contains(alias) == true ) {
@@ -208,8 +211,8 @@ fun Folder(
 }
 
 @Composable
-fun FolderMod(
-    folderName: String,
+fun ModButton(
+    name: String,
     onDelete:() -> Unit
 ) {
     Surface(
@@ -236,7 +239,7 @@ fun FolderMod(
             ) {
                 item {
                     Text(
-                        text = folderName,
+                        text = name,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
                         textAlign = TextAlign.Start,
